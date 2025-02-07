@@ -33,43 +33,17 @@ permissions: write-all
 #CI任务
 jobs:
   cleanup:
-  runs-on: ubuntu-22.04
-  steps:
-    - name: Install necessary tools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y curl
-
-    - name: Delete old Releases and Workflows
-      uses: ophub/delete-releases-workflows@main
-      with:
-        gh_token: ${{secrets.GITHUB_TOKEN}}
-        delete_releases: false
-        releases_keep_latest: 0
-        delete_tags: false
-        delete_workflows: true
-        workflows_keep_day: 0
-
-    - name: Clean up packages and free up space
-      run: |
-        set -e
-        gcloud_prerm=$(cat <<EOF
-#!/bin/sh
-set -e
-EOF
-        )
-        echo "$gcloud_prerm" | sudo tee /var/lib/dpkg/info/google-cloud-cli-anthoscli.prerm > /dev/null
-        echo "$gcloud_prerm" | sudo tee /var/lib/dpkg/info/google-cloud-cli.prerm > /dev/null
-        pkgs="google-cloud-sdk google-cloud-cli-anthoscli"
-        for pkg in $pkgs; do
-          if dpkg -l | grep -q $pkg; then
-            sudo apt-get remove --autoremove -y $pkg || echo "::warning::The command [sudo apt-get remove -y $pkg] failed to complete successfully. Proceeding..."
-          fi
-        done
-        sudo apt-get clean || echo "::warning::The command [sudo apt-get clean] failed to complete successfully. Proceeding..."
-        AFTER=$(df / | tail -1 | awk '{print $4}')
-        SAVED=$((AFTER-BEFORE))
-        echo "Saved space: $SAVED"
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Delete old Releases and Workflows
+        uses: ophub/delete-releases-workflows@main
+        with:
+          gh_token: ${{secrets.GITHUB_TOKEN}}
+          delete_releases: false
+          releases_keep_latest: 0
+          delete_tags: false
+          delete_workflows: true
+          workflows_keep_day: 0
 
   config:
     needs: cleanup
